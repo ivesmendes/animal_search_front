@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.animalsearch"
+    namespace = "com.example.animal_search_front"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

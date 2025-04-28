@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class MapScreen extends StatefulWidget {
-  MapScreen({Key? key}) : super(key: key);  // Parâmetro 'key' já está correto
+  const MapScreen({Key? key}) : super(key: key);
 
   @override
-  MapScreenState createState() => MapScreenState();  // Nome da classe corrigido
+  MapScreenState createState() => MapScreenState();
 }
 
 class MapScreenState extends State<MapScreen> {  // Alterado para tornar público
@@ -42,11 +42,13 @@ class MapScreenState extends State<MapScreen> {  // Alterado para tornar públic
       body: GoogleMap(
         onMapCreated: _onMapCreated,
         markers: _markers,
-        onTap: _onTap,  // Chama _addMarker ao tocar no mapa
+        onTap: _onTap,
         initialCameraPosition: const CameraPosition(
-          target: LatLng(-23.5505, -46.6333),  // São Paulo como exemplo
+          target: LatLng(-23.5505, -46.6333),
           zoom: 12,
         ),
+        myLocationEnabled: true,           // <-- Aqui
+        myLocationButtonEnabled: true,      // <-- E aqui
       ),
     );
   }
