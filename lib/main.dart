@@ -12,7 +12,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Animal Search',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: LoginScreen(), // Defina o MapScreen como a tela inicial
+      home: MapScreen(), // Defina o MapScreen como a tela inicial
     );
   }
 }
