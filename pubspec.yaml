@@ -31,3 +31,5 @@ flutter:
   assets:
   - assets/icons/animal.svg
   - assets/icons/plus.svg
+  - assets/icons/AnimalSearch.png
+  - assets/icons/google.png
