@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/map_screen.dart'; // Importe a tela do mapa
-import 'screens/login_screen.dart';
+
 
 void main() {
   runApp(MyApp());
