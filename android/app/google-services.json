@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "827444107597",
+    "project_id": "animalsearch-d7828",
+    "storage_bucket": "animalsearch-d7828.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:827444107597:android:6b9adcc37b0cd5c9243f04",
+        "android_client_info": {
+          "package_name": "com.animalsearch"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe-WGTNG1yscjKFPzVaINpBDKhEj75i9Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
