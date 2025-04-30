@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'screens/map_screen.dart'; // Tela principal do mapa
+import 'screens/map_screen.dart';   // Tela principal do mapa
 import 'screens/login_screen.dart'; // (se quiser usar futuramente)
 
 void main() async {
