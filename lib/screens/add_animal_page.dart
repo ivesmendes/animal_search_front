@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:path/path.dart' as path;
+import 'dart:async';
+
 
 class AddAnimalPage extends StatefulWidget {
   const AddAnimalPage({Key? key}) : super(key: key);
@@ -54,18 +59,66 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
     }
   }
 
-  void _submit() {
-    if (_formKey.currentState!.validate() && _pickedLocation != null) {
+  void _submit() async {
+  if (_formKey.currentState!.validate() && _pickedLocation != null && _image != null) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      print("Iniciando upload da imagem...");
+      final fileName = path.basename(_image!.path);
+      final storageRef = FirebaseStorage.instance.ref().child('animal_images/$fileName');
+
+      await storageRef.putFile(_image!).timeout(
+        const Duration(seconds: 15),
+        onTimeout: () {
+          throw TimeoutException("Upload demorou muito");
+        },
+      );
+
+
+      final imageUrl = await storageRef.getDownloadURL();
+      print("URL da imagem obtida: $imageUrl");
+
+      final animalData = {
+        'tipo': _animalType == 'Outro' ? _otherAnimalType : _animalType,
+        'raca': _breedController.text,
+        'cor': _colorController.text,
+        'porte': _selectedSize,
+        'data-visto': _dateController.text,
+        'descricao': _descriptionController.text,
+        'latitude': _pickedLocation!.latitude,
+        'longitude': _pickedLocation!.longitude,
+        'imagem_url': imageUrl,
+      };
+
+      print("Salvando no Firestore...");
+      await FirebaseFirestore.instance.collection('animais_perdidos').add(animalData);
+      print("Salvo com sucesso.");
+
+      Navigator.of(context).pop(); // Fecha o loader
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Animal cadastrado com sucesso!')),
       );
       Navigator.pop(context);
-    } else {
+
+    } catch (e) {
+      Navigator.of(context).pop();
+      print("Erro durante cadastro: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos e selecione uma localização.')),
+        SnackBar(content: Text('Erro ao cadastrar: $e')),
       );
     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Preencha todos os campos, selecione uma localização e uma foto.')),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
