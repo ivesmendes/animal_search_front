@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "com.animalsearch"
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -39,13 +39,9 @@ flutter {
 }
 
 dependencies {
-    // ✅ Firebase BoM (Bill of Materials) – gerencia versões automaticamente
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
-
-    // ✅ Exemplo de SDK do Firebase — Analytics
     implementation("com.google.firebase:firebase-analytics")
-
-    // Você pode adicionar outros SDKs abaixo conforme necessário:
-    // implementation("com.google.firebase:firebase-auth")
-    // implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-auth")       // ← login/cadastro
+    implementation("com.google.firebase:firebase-firestore")  // ← se quiser salvar dados dos animais, por exemplo
 }
+

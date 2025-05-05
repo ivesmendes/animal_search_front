@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'signIn_screen.dart'; // <--- Importação da tela de cadastro
+import 'package:firebase_auth/firebase_auth.dart';
+import 'map_screen.dart';
+import 'signIn_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -12,6 +14,53 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    final email = _emailController.text.trim();
+    final senha = _passwordController.text;
+
+    if (email.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: senha,
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MapScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = 'Erro ao fazer login';
+
+      if (e.code == 'user-not-found') {
+        message = 'Usuário não encontrado';
+      } else if (e.code == 'wrong-password') {
+        message = 'Senha incorreta';
+      } else if (e.code == 'invalid-email') {
+        message = 'Email inválido';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Logo da Marca
+              // Logo
               SizedBox(
                 height: 200,
                 child: Image.asset(
@@ -39,19 +88,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   fontWeight: FontWeight.bold,
                   color: Colors.blueAccent,
                 ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               const Text(
                 'Faça login para continuar',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.black54,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.black54),
               ),
               const SizedBox(height: 32),
 
-              // Campo de Email
+              // Email
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -67,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Campo de Senha
+              // Senha
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
@@ -81,7 +126,9 @@ class _LoginScreenState extends State<LoginScreen> {
                   fillColor: Colors.white,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
                     onPressed: () {
                       setState(() {
@@ -93,40 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Botão de Entrar com Google
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    side: const BorderSide(color: Colors.blueAccent),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    backgroundColor: Colors.white,
-                  ),
-                  icon: Image.asset(
-                    'assets/icons/google.png',
-                    height: 24,
-                    width: 24,
-                  ),
-                  label: const Text(
-                    'Entrar com Google',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.blueAccent,
-                    ),
-                  ),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Login com Google')),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // Botão de Login padrão
+              // Botão login
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -137,34 +151,27 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     backgroundColor: Colors.blueAccent,
                   ),
-                  onPressed: () {
-                    String email = _emailController.text;
-                    String senha = _passwordController.text;
-
-                    if (email.isNotEmpty && senha.isNotEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Login realizado')),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Preencha todos os campos')),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    'Entrar',
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  onPressed: _isLoading ? null : _login,
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text(
+                          'Entrar',
+                          style: TextStyle(fontSize: 18),
+                        ),
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Link para Cadastro
+              // Link cadastro
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Não tem conta? ',
-                      style: TextStyle(color: Colors.black54)),
+                  const Text(
+                    'Não tem conta? ',
+                    style: TextStyle(color: Colors.black54),
+                  ),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(

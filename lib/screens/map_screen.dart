@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'add_animal_page.dart';
 import 'login_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -56,14 +57,15 @@ class MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mapa de Animais Perdidos'),
         backgroundColor: Colors.lightBlue,
       ),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
           children: [
             DrawerHeader(
               decoration: const BoxDecoration(
@@ -71,23 +73,63 @@ class MapScreenState extends State<MapScreen> {
               ),
               child: Center(
                 child: Image.asset(
-                  'assets/icons/AnimalSearch.png', // Ícone da marca
+                  'assets/icons/AnimalSearch.png',
                   width: 120,
                   fit: BoxFit.contain,
                 ),
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.login),
-              title: const Text('Login'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
-              },
-            ),
+
+            const Spacer(),
+
+            if (user != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: Row(
+                  children: [
+                    const Icon(Icons.person, size: 28),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        user.displayName ?? user.email ?? 'Usuário',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+            if (user != null) const SizedBox(height: 12),
+
+            if (user != null)
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Sair'),
+                onTap: () async {
+                  await FirebaseAuth.instance.signOut();
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  );
+                },
+              ),
+
+            if (user == null)
+              ListTile(
+                leading: const Icon(Icons.login),
+                title: const Text('Login'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const LoginScreen()),
+                  );
+                },
+              ),
           ],
         ),
       ),
@@ -114,7 +156,8 @@ class MapScreenState extends State<MapScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => const AddAnimalPage()),
+                    builder: (context) => const AddAnimalPage(),
+                  ),
                 );
               },
               backgroundColor: Colors.blue,

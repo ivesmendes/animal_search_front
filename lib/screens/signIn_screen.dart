@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'map_screen.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -12,6 +14,56 @@ class _SignInScreenState extends State<SignInScreen> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  Future<void> _registrarUsuario() async {
+    final nome = _nomeController.text.trim();
+    final email = _emailController.text.trim();
+    final senha = _senhaController.text;
+
+    if (nome.isEmpty || email.isEmpty || senha.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Preencha todos os campos')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      UserCredential cred = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: senha);
+
+      // Atualizar o nome do usuário
+      await cred.user!.updateDisplayName(nome);
+
+      // Redirecionar para o mapa
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MapScreen()),
+      );
+    } on FirebaseAuthException catch (e) {
+      String message = 'Erro ao cadastrar';
+
+      if (e.code == 'email-already-in-use') {
+        message = 'Este email já está em uso';
+      } else if (e.code == 'weak-password') {
+        message = 'A senha deve ter pelo menos 6 caracteres';
+      } else if (e.code == 'invalid-email') {
+        message = 'Email inválido';
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro: ${e.toString()}')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,11 +87,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   fontWeight: FontWeight.bold,
                   color: Colors.blueAccent,
                 ),
-                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
 
-              // Campo Nome
               TextField(
                 controller: _nomeController,
                 decoration: InputDecoration(
@@ -51,11 +101,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   filled: true,
                   fillColor: Colors.white,
                 ),
-                keyboardType: TextInputType.name,
               ),
               const SizedBox(height: 20),
 
-              // Campo Email
               TextField(
                 controller: _emailController,
                 decoration: InputDecoration(
@@ -71,7 +119,6 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Campo Senha
               TextField(
                 controller: _senhaController,
                 obscureText: _obscurePassword,
@@ -85,7 +132,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   fillColor: Colors.white,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
                     ),
                     onPressed: () {
                       setState(() {
@@ -97,7 +146,6 @@ class _SignInScreenState extends State<SignInScreen> {
               ),
               const SizedBox(height: 30),
 
-              // Botão de Cadastro
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
@@ -108,26 +156,15 @@ class _SignInScreenState extends State<SignInScreen> {
                     ),
                     backgroundColor: Colors.blueAccent,
                   ),
-                  onPressed: () {
-                    String nome = _nomeController.text;
-                    String email = _emailController.text;
-                    String senha = _senhaController.text;
-
-                    if (nome.isNotEmpty && email.isNotEmpty && senha.isNotEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Cadastro realizado!')),
-                      );
-                      // Depois você pode fazer navegação para o login ou para o mapa
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Preencha todos os campos')),
-                      );
-                    }
-                  },
-                  child: const Text(
-                    'Cadastrar',
-                    style: TextStyle(fontSize: 18),
-                  ),
+                  onPressed: _isLoading ? null : _registrarUsuario,
+                  child: _isLoading
+                      ? const CircularProgressIndicator(
+                          color: Colors.white,
+                        )
+                      : const Text(
+                          'Cadastrar',
+                          style: TextStyle(fontSize: 18),
+                        ),
                 ),
               ),
             ],
