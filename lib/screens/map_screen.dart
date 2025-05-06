@@ -1,7 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'add_animal_page.dart';
 import 'login_screen.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -21,6 +23,7 @@ class MapScreenState extends State<MapScreen> {
   void initState() {
     super.initState();
     _solicitarPermissaoLocalizacao();
+    _carregarAnimaisDoFirestore();
   }
 
   Future<void> _solicitarPermissaoLocalizacao() async {
@@ -39,20 +42,63 @@ class MapScreenState extends State<MapScreen> {
     );
   }
 
-  void _addMarker(double lat, double lng) {
-    final marker = Marker(
-      markerId: const MarkerId('some_id'),
-      position: LatLng(lat, lng),
-      infoWindow: const InfoWindow(title: "Animal perdido"),
-      icon: BitmapDescriptor.defaultMarker,
-    );
-    setState(() {
-      _markers.add(marker);
-    });
+  Future<void> _carregarAnimaisDoFirestore() async {
+    final snapshot = await FirebaseFirestore.instance.collection('animais_perdidos').get();
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final lat = data['latitude'];
+      final lng = data['longitude'];
+      final imageUrl = data['imagem_url'];
+      final tipo = data['tipo'];
+      final raca = data['raca'];
+
+      final marker = Marker(
+        markerId: MarkerId(doc.id),
+        position: LatLng(lat, lng),
+        infoWindow: InfoWindow(
+          title: '$tipo - $raca',
+          onTap: () {
+            _mostrarDetalhesAnimal(data);
+          },
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+      );
+
+      setState(() {
+        _markers.add(marker);
+      });
+    }
   }
 
-  void _onTap(LatLng location) {
-    _addMarker(location.latitude, location.longitude);
+  void _mostrarDetalhesAnimal(Map<String, dynamic> animalData) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: Text(animalData['tipo'] ?? 'Animal'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (animalData['imagem_url'] != null)
+                Image.network(animalData['imagem_url'], height: 120),
+              const SizedBox(height: 10),
+              Text('Raça: ${animalData['raca'] ?? ''}'),
+              Text('Cor: ${animalData['cor'] ?? ''}'),
+              Text('Porte: ${animalData['porte'] ?? ''}'),
+              Text('Data visto: ${animalData['data-visto'] ?? ''}'),
+              Text('Descrição: ${animalData['descricao'] ?? ''}'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              child: const Text('Fechar'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -79,9 +125,7 @@ class MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
-
             const Spacer(),
-
             if (user != null)
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -102,9 +146,7 @@ class MapScreenState extends State<MapScreen> {
                   ],
                 ),
               ),
-
             if (user != null) const SizedBox(height: 12),
-
             if (user != null)
               ListTile(
                 leading: const Icon(Icons.logout),
@@ -117,7 +159,6 @@ class MapScreenState extends State<MapScreen> {
                   );
                 },
               ),
-
             if (user == null)
               ListTile(
                 leading: const Icon(Icons.login),
@@ -139,7 +180,6 @@ class MapScreenState extends State<MapScreen> {
             child: GoogleMap(
               onMapCreated: _onMapCreated,
               markers: _markers,
-              onTap: _onTap,
               initialCameraPosition: const CameraPosition(
                 target: LatLng(-5.0892, -42.8016),
                 zoom: 13,

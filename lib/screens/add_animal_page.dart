@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:path/path.dart' as path;
+import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 import 'dart:async';
-
 
 class AddAnimalPage extends StatefulWidget {
   const AddAnimalPage({Key? key}) : super(key: key);
@@ -59,66 +59,88 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
     }
   }
 
+  // NOVA FUNÇÃO DE UPLOAD PARA CLOUDINARY
+  Future<String?> uploadImageToCloudinary(File imageFile) async {
+    final cloudName = 'dny9nwscu';
+    final uploadPreset = 'animal_upload';
+
+    final uri = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+
+    final request = http.MultipartRequest('POST', uri)
+      ..fields['upload_preset'] = uploadPreset
+      ..files.add(await http.MultipartFile.fromPath(
+        'file',
+        imageFile.path,
+        contentType: MediaType('image', 'jpeg'),
+        filename: path.basename(imageFile.path),
+      ));
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final responseData = await response.stream.bytesToString();
+      final imageUrl = RegExp(r'"secure_url":"(.*?)"')
+          .firstMatch(responseData)
+          ?.group(1)
+          ?.replaceAll(r'\/', '/');
+      return imageUrl;
+    } else {
+      print('Erro no upload: ${response.statusCode}');
+      return null;
+    }
+  }
+
   void _submit() async {
-  if (_formKey.currentState!.validate() && _pickedLocation != null && _image != null) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      print("Iniciando upload da imagem...");
-      final fileName = path.basename(_image!.path);
-      final storageRef = FirebaseStorage.instance.ref().child('animal_images/$fileName');
-
-      await storageRef.putFile(_image!).timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw TimeoutException("Upload demorou muito");
-        },
+    if (_formKey.currentState!.validate() && _pickedLocation != null && _image != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
       );
 
+      try {
+        print("Iniciando upload da imagem para o Cloudinary...");
+        final imageUrl = await uploadImageToCloudinary(_image!);
 
-      final imageUrl = await storageRef.getDownloadURL();
-      print("URL da imagem obtida: $imageUrl");
+        if (imageUrl == null) throw Exception("Erro ao fazer upload da imagem.");
 
-      final animalData = {
-        'tipo': _animalType == 'Outro' ? _otherAnimalType : _animalType,
-        'raca': _breedController.text,
-        'cor': _colorController.text,
-        'porte': _selectedSize,
-        'data-visto': _dateController.text,
-        'descricao': _descriptionController.text,
-        'latitude': _pickedLocation!.latitude,
-        'longitude': _pickedLocation!.longitude,
-        'imagem_url': imageUrl,
-      };
+        print("URL da imagem: $imageUrl");
 
-      print("Salvando no Firestore...");
-      await FirebaseFirestore.instance.collection('animais_perdidos').add(animalData);
-      print("Salvo com sucesso.");
+        final animalData = {
+          'tipo': _animalType == 'Outro' ? _otherAnimalType : _animalType,
+          'raca': _breedController.text,
+          'cor': _colorController.text,
+          'porte': _selectedSize,
+          'data-visto': _dateController.text,
+          'descricao': _descriptionController.text,
+          'latitude': _pickedLocation!.latitude,
+          'longitude': _pickedLocation!.longitude,
+          'imagem_url': imageUrl,
+        };
 
-      Navigator.of(context).pop(); // Fecha o loader
+        print("Salvando no Firestore...");
+        await FirebaseFirestore.instance.collection('animais_perdidos').add(animalData);
+        print("Salvo com sucesso.");
+
+        Navigator.of(context).pop(); // Fecha o loader
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Animal cadastrado com sucesso!')),
+        );
+        Navigator.pop(context);
+
+      } catch (e) {
+        Navigator.of(context).pop();
+        print("Erro durante cadastro: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erro ao cadastrar: $e')),
+        );
+      }
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Animal cadastrado com sucesso!')),
-      );
-      Navigator.pop(context);
-
-    } catch (e) {
-      Navigator.of(context).pop();
-      print("Erro durante cadastro: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao cadastrar: $e')),
+        const SnackBar(content: Text('Preencha todos os campos, selecione uma localização e uma foto.')),
       );
     }
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Preencha todos os campos, selecione uma localização e uma foto.')),
-    );
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
