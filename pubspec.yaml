@@ -1,7 +1,7 @@
 name: animal_search_front
 description: "A new Flutter project."
 
-publish_to: 'none' 
+publish_to: 'none'
 
 version: 1.0.0+1
 
@@ -11,15 +11,18 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
   google_maps_flutter: ^2.2.8
   image_picker: ^0.8.4+4
   flutter_svg: ^1.1.6
   firebase_core: ^2.24.2
   cloud_firestore: ^4.13.5
   firebase_storage: ^11.5.5
-  permission_handler: ^11.0.1
   firebase_auth: ^4.16.0
-  firebase_app_check: ^0.2.2 # ✅ Adicionada esta linha
+  firebase_app_check: ^0.2.2
+  permission_handler: ^11.0.1
   path: ^1.9.0
   http: ^0.13.5
 
@@ -29,7 +32,6 @@ dev_dependencies:
   flutter_lints: ^5.0.0
 
 flutter:
-
   uses-material-design: true
 
   assets:

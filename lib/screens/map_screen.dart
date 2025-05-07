@@ -1,12 +1,17 @@
-
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/rendering.dart';
+import 'package:http/http.dart' as http;
+import 'dart:ui' as ui;
+
 import 'add_animal_page.dart';
 import 'login_screen.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'custom_marker_widget.dart'; // Função de geração de marcador visual
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -50,19 +55,15 @@ class MapScreenState extends State<MapScreen> {
       final lat = data['latitude'];
       final lng = data['longitude'];
       final imageUrl = data['imagem_url'];
-      final tipo = data['tipo'];
-      final raca = data['raca'];
+      final raca = data['raca'] ?? '';
+
+      final Uint8List markerIcon = await createCustomMarker(context, imageUrl, raca);
 
       final marker = Marker(
         markerId: MarkerId(doc.id),
         position: LatLng(lat, lng),
-        infoWindow: InfoWindow(
-          title: '$tipo - $raca',
-          onTap: () {
-            _mostrarDetalhesAnimal(data);
-          },
-        ),
-        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
+        icon: BitmapDescriptor.fromBytes(markerIcon),
+        onTap: () => _mostrarDetalhesAnimal(data),
       );
 
       setState(() {
@@ -74,30 +75,28 @@ class MapScreenState extends State<MapScreen> {
   void _mostrarDetalhesAnimal(Map<String, dynamic> animalData) {
     showDialog(
       context: context,
-      builder: (_) {
-        return AlertDialog(
-          title: Text(animalData['tipo'] ?? 'Animal'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (animalData['imagem_url'] != null)
-                Image.network(animalData['imagem_url'], height: 120),
-              const SizedBox(height: 10),
-              Text('Raça: ${animalData['raca'] ?? ''}'),
-              Text('Cor: ${animalData['cor'] ?? ''}'),
-              Text('Porte: ${animalData['porte'] ?? ''}'),
-              Text('Data visto: ${animalData['data-visto'] ?? ''}'),
-              Text('Descrição: ${animalData['descricao'] ?? ''}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Fechar'),
-              onPressed: () => Navigator.of(context).pop(),
-            ),
+      builder: (_) => AlertDialog(
+        title: Text(animalData['tipo'] ?? 'Animal'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (animalData['imagem_url'] != null)
+              Image.network(animalData['imagem_url'], height: 120),
+            const SizedBox(height: 10),
+            Text('Raça: ${animalData['raca'] ?? ''}'),
+            Text('Cor: ${animalData['cor'] ?? ''}'),
+            Text('Porte: ${animalData['porte'] ?? ''}'),
+            Text('Data visto: ${animalData['data-visto'] ?? ''}'),
+            Text('Descrição: ${animalData['descricao'] ?? ''}'),
           ],
-        );
-      },
+        ),
+        actions: [
+          TextButton(
+            child: const Text('Fechar'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -114,9 +113,7 @@ class MapScreenState extends State<MapScreen> {
         child: Column(
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(
-                color: Colors.blueAccent,
-              ),
+              decoration: const BoxDecoration(color: Colors.blueAccent),
               child: Center(
                 child: Image.asset(
                   'assets/icons/AnimalSearch.png',
@@ -136,10 +133,7 @@ class MapScreenState extends State<MapScreen> {
                     Expanded(
                       child: Text(
                         user.displayName ?? user.email ?? 'Usuário',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -195,36 +189,19 @@ class MapScreenState extends State<MapScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddAnimalPage(),
-                  ),
+                  MaterialPageRoute(builder: (context) => const AddAnimalPage()),
                 );
               },
               backgroundColor: Colors.blue,
               icon: Row(
                 children: [
-                  SvgPicture.asset(
-                    'assets/icons/animal.svg',
-                    width: 24,
-                    height: 24,
-                    color: Colors.white,
-                  ),
+                  SvgPicture.asset('assets/icons/animal.svg', width: 24, height: 24, color: Colors.white),
                   const SizedBox(width: 6),
-                  SvgPicture.asset(
-                    'assets/icons/plus.svg',
-                    width: 20,
-                    height: 20,
-                    color: Colors.white,
-                  ),
+                  SvgPicture.asset('assets/icons/plus.svg', width: 20, height: 20, color: Colors.white),
                 ],
               ),
-              label: const Text(
-                'Adicionar',
-                style: TextStyle(color: Colors.white),
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
+              label: const Text('Adicionar', style: TextStyle(color: Colors.white)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             ),
           ),
         ],
