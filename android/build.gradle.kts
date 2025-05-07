@@ -3,7 +3,7 @@ import org.gradle.api.Project
 import org.gradle.api.tasks.Delete
 
 plugins {
-    id("com.google.gms.google-services") version "4.4.2" apply false // ✅ Firebase plugin recomendado
+    id("com.google.gms.google-services") version "4.3.15" apply false // ✅ versão compatível
 }
 
 allprojects {

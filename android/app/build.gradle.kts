@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services") // Firebase plugin
+    id("com.google.gms.google-services") 
 }
 
 android {
@@ -41,7 +41,6 @@ flutter {
 dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.13.0"))
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-auth")       // ← login/cadastro
-    implementation("com.google.firebase:firebase-firestore")  // ← se quiser salvar dados dos animais, por exemplo
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
 }
-

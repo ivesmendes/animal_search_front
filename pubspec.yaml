@@ -19,25 +19,21 @@ dependencies:
   firebase_storage: ^11.5.5
   permission_handler: ^11.0.1
   firebase_auth: ^4.16.0
+  firebase_app_check: ^0.2.2 # ✅ Adicionada esta linha
   path: ^1.9.0
   http: ^0.13.5
-
-
-
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^5.0.0
-
 
 flutter:
 
   uses-material-design: true
 
   assets:
-  - assets/icons/animal.svg
-  - assets/icons/plus.svg
-  - assets/icons/AnimalSearch.png
-  - assets/icons/google.png
+    - assets/icons/animal.svg
+    - assets/icons/plus.svg
+    - assets/icons/AnimalSearch.png
+    - assets/icons/google.png
