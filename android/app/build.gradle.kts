@@ -2,7 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services") 
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -43,4 +43,6 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("com.google.firebase:firebase-appcheck-debug:18.0.0")
+    implementation("com.google.firebase:firebase-appcheck-playintegrity")
 }

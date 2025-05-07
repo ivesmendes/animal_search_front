@@ -1,4 +1,4 @@
-name: animal_search_front
+name: animal_search
 description: "A new Flutter project."
 
 publish_to: 'none'
@@ -20,7 +20,7 @@ dependencies:
   firebase_core: ^2.24.2
   cloud_firestore: ^4.13.5
   firebase_storage: ^11.5.5
-  firebase_auth: ^4.16.0
+  firebase_auth: ^4.17.0 # Atualizado para versão mais estável
   firebase_app_check: ^0.2.2
   permission_handler: ^11.0.1
   path: ^1.9.0
@@ -30,6 +30,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1  
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/AnimalSearch.png"  # 
 
 flutter:
   uses-material-design: true
@@ -39,3 +45,4 @@ flutter:
     - assets/icons/plus.svg
     - assets/icons/AnimalSearch.png
     - assets/icons/google.png
+

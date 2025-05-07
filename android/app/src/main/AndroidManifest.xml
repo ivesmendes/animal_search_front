@@ -7,7 +7,7 @@
 
     <application
         android:name="${applicationName}"
-        android:label="animal_search_front"
+        android:label="Animal Search"  
         android:icon="@mipmap/ic_launcher">
 
         <!-- Chave de API do Google Maps -->
