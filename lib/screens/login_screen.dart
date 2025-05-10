@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'map_screen.dart';
 import 'signIn_screen.dart';
 
@@ -11,15 +13,28 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>(); // Adicionado FormKey
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _isLoading = false;
-  bool _isEmailVerified = true; // Controle de verificação de email
+  bool _isEmailVerified = true;
+
+  Future<void> _registrarUsuarioNoFirestore(User user) async {
+    final docRef = FirebaseFirestore.instance.collection('usuarios').doc(user.uid);
+    final docSnapshot = await docRef.get();
+
+    if (!docSnapshot.exists) {
+      await docRef.set({
+        'uid': user.uid,
+        'nome': user.displayName ?? user.email?.split('@')[0] ?? 'Usuário',
+        'email': user.email ?? '',
+      });
+    }
+  }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return; // Validação do formulário
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
@@ -29,14 +44,17 @@ class _LoginScreenState extends State<LoginScreen> {
         password: _passwordController.text,
       );
 
-      if (!userCredential.user!.emailVerified) { // Verificação de email
+      final user = userCredential.user!;
+      if (!user.emailVerified) {
         setState(() {
           _isEmailVerified = false;
           _isLoading = false;
         });
-        await _showEmailVerificationDialog(userCredential.user!);
+        await _showEmailVerificationDialog(user);
         return;
       }
+
+      await _registrarUsuarioNoFirestore(user);
 
       Navigator.pushReplacement(
         context,
@@ -145,7 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Email Field
                 TextFormField(
                   controller: _emailController,
                   decoration: InputDecoration(
@@ -166,7 +183,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Password Field
                 TextFormField(
                   controller: _passwordController,
                   obscureText: _obscurePassword,
@@ -195,7 +211,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 10),
 
-                // Forgot Password
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
@@ -207,7 +222,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
-                // Email Verification Warning
                 if (!_isEmailVerified)
                   Column(
                     children: [
@@ -219,7 +233,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
 
-                // Login Button
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -238,7 +251,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // Sign Up Link
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
