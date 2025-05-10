@@ -22,8 +22,6 @@ dependencies:
   cloud_firestore: ^4.13.5
   firebase_storage: ^11.5.5
   firebase_app_check: ^0.2.2
-  firebase_messaging: ^14.6.5 # ✅ ADICIONADO
-  flutter_local_notifications: ^16.3.2 # ✅ ADICIONADO
   permission_handler: ^11.0.1
   path: ^1.9.0
   http: ^0.13.5
