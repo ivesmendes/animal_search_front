@@ -3,10 +3,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'dart:async';
 
 class AddAnimalPage extends StatefulWidget {
   const AddAnimalPage({Key? key}) : super(key: key);
@@ -59,7 +59,6 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
     }
   }
 
-  // NOVA FUNÇÃO DE UPLOAD PARA CLOUDINARY
   Future<String?> uploadImageToCloudinary(File imageFile) async {
     final cloudName = 'dny9nwscu';
     final uploadPreset = 'animal_upload';
@@ -99,12 +98,11 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
       );
 
       try {
-        print("Iniciando upload da imagem para o Cloudinary...");
+        final user = FirebaseAuth.instance.currentUser;
+        if (user == null) throw Exception('Usuário não autenticado');
+
         final imageUrl = await uploadImageToCloudinary(_image!);
-
         if (imageUrl == null) throw Exception("Erro ao fazer upload da imagem.");
-
-        print("URL da imagem: $imageUrl");
 
         final animalData = {
           'tipo': _animalType == 'Outro' ? _otherAnimalType : _animalType,
@@ -116,13 +114,14 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
           'latitude': _pickedLocation!.latitude,
           'longitude': _pickedLocation!.longitude,
           'imagem_url': imageUrl,
+          'usuario_uid': user.uid,
+          'usuario_email': user.email,
+          'usuario_nome': user.displayName ?? 'Anônimo',
         };
 
-        print("Salvando no Firestore...");
         await FirebaseFirestore.instance.collection('animais_perdidos').add(animalData);
-        print("Salvo com sucesso.");
 
-        Navigator.of(context).pop(); // Fecha o loader
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Animal cadastrado com sucesso!')),
         );
@@ -145,9 +144,7 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cadastrar Animal Perdido'),
-      ),
+      appBar: AppBar(title: const Text('Cadastrar Animal Perdido')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Form(
@@ -172,15 +169,10 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
               if (_animalType == 'Outro')
                 TextFormField(
                   decoration: const InputDecoration(labelText: 'Informe o tipo'),
-                  onChanged: (value) {
-                    _otherAnimalType = value;
-                  },
-                  validator: (value) {
-                    if (_animalType == 'Outro' && (value == null || value.isEmpty)) {
-                      return 'Informe o tipo de animal';
-                    }
-                    return null;
-                  },
+                  onChanged: (value) => _otherAnimalType = value,
+                  validator: (value) => _animalType == 'Outro' && (value == null || value.isEmpty)
+                      ? 'Informe o tipo de animal'
+                      : null,
                 ),
               TextFormField(
                 controller: _breedController,
@@ -200,17 +192,12 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
                   DropdownMenuItem(value: 'Médio', child: Text('Médio')),
                   DropdownMenuItem(value: 'Grande', child: Text('Grande')),
                 ],
-                onChanged: (value) {
-                  setState(() => _selectedSize = value!);
-                },
+                onChanged: (value) => setState(() => _selectedSize = value!),
               ),
               TextFormField(
                 controller: _dateController,
                 readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Data em que foi visto',
-                  hintText: 'DD/MM/AAAA',
-                ),
+                decoration: const InputDecoration(labelText: 'Data em que foi visto', hintText: 'DD/MM/AAAA'),
                 onTap: _pickDate,
                 validator: (value) => value!.isEmpty ? 'Informe a data' : null,
               ),

@@ -11,7 +11,9 @@ import 'dart:ui' as ui;
 
 import 'add_animal_page.dart';
 import 'login_screen.dart';
-import 'custom_marker_widget.dart'; // Função de geração de marcador visual
+import 'custom_marker_widget.dart';
+import 'animal_details_view.dart';
+import 'chat_screen.dart'; // nova importação
 
 class MapScreen extends StatefulWidget {
   const MapScreen({Key? key}) : super(key: key);
@@ -20,15 +22,26 @@ class MapScreen extends StatefulWidget {
   MapScreenState createState() => MapScreenState();
 }
 
-class MapScreenState extends State<MapScreen> {
+class MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixin {
   late GoogleMapController mapController;
   final Set<Marker> _markers = {};
+  late AnimationController _animationController;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
     _solicitarPermissaoLocalizacao();
     _carregarAnimaisDoFirestore();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _solicitarPermissaoLocalizacao() async {
@@ -63,7 +76,7 @@ class MapScreenState extends State<MapScreen> {
         markerId: MarkerId(doc.id),
         position: LatLng(lat, lng),
         icon: BitmapDescriptor.fromBytes(markerIcon),
-        onTap: () => _mostrarDetalhesAnimal(data),
+        onTap: () => _mostrarDetalhesAnimal(doc.id, data),
       );
 
       setState(() {
@@ -72,31 +85,27 @@ class MapScreenState extends State<MapScreen> {
     }
   }
 
-  void _mostrarDetalhesAnimal(Map<String, dynamic> animalData) {
-    showDialog(
+  void _mostrarDetalhesAnimal(String animalId, Map<String, dynamic> animalData) {
+    showModalBottomSheet(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(animalData['tipo'] ?? 'Animal'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (animalData['imagem_url'] != null)
-              Image.network(animalData['imagem_url'], height: 120),
-            const SizedBox(height: 10),
-            Text('Raça: ${animalData['raca'] ?? ''}'),
-            Text('Cor: ${animalData['cor'] ?? ''}'),
-            Text('Porte: ${animalData['porte'] ?? ''}'),
-            Text('Data visto: ${animalData['data-visto'] ?? ''}'),
-            Text('Descrição: ${animalData['descricao'] ?? ''}'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            child: const Text('Fechar'),
-            onPressed: () => Navigator.of(context).pop(),
-          ),
-        ],
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.4,
+          maxChildSize: 0.95,
+          builder: (_, scrollController) {
+            return SingleChildScrollView(
+              controller: scrollController,
+              child: AnimalDetailsView(
+                animalData: animalData,
+                animalId: animalId,
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -111,6 +120,7 @@ class MapScreenState extends State<MapScreen> {
       ),
       drawer: Drawer(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             DrawerHeader(
               decoration: const BoxDecoration(color: Colors.blueAccent),
@@ -122,6 +132,47 @@ class MapScreenState extends State<MapScreen> {
                 ),
               ),
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ChatScreen()),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 4,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  child: Row(
+                    children: const [
+                      Icon(Icons.message, color: Colors.blueAccent),
+                      SizedBox(width: 12),
+                      Text(
+                        'Chat',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const Divider(),
             const Spacer(),
             if (user != null)
               Padding(
@@ -187,10 +238,16 @@ class MapScreenState extends State<MapScreen> {
             left: 16,
             child: FloatingActionButton.extended(
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AddAnimalPage()),
-                );
+                if (user == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Faça login para adicionar um animal.')),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const AddAnimalPage()),
+                  );
+                }
               },
               backgroundColor: Colors.blue,
               icon: Row(
