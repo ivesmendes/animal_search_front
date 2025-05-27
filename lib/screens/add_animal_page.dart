@@ -124,11 +124,11 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
 
         await FirebaseFirestore.instance.collection('animais_perdidos').add(animalData);
 
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(); // fecha o dialog de carregamento
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Animal cadastrado com sucesso!')),
         );
-        Navigator.pop(context);
+        Navigator.pop(context, true); // <- importante para atualizar o mapa
       } catch (e) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(

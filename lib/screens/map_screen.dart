@@ -63,6 +63,8 @@ class MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixi
   Future<void> _carregarAnimaisDoFirestore() async {
     final snapshot = await FirebaseFirestore.instance.collection('animais_perdidos').get();
 
+    _markers.clear();
+
     for (var doc in snapshot.docs) {
       final data = doc.data();
       final lat = data['latitude'];
@@ -107,6 +109,17 @@ class MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixi
         );
       },
     );
+  }
+
+  Future<void> _abrirPaginaCadastro() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AddAnimalPage()),
+    );
+
+    if (result == true) {
+      await _carregarAnimaisDoFirestore();
+    }
   }
 
   @override
@@ -237,16 +250,13 @@ class MapScreenState extends State<MapScreen> with SingleTickerProviderStateMixi
             bottom: 16,
             left: 16,
             child: FloatingActionButton.extended(
-              onPressed: () {
+              onPressed: () async {
                 if (user == null) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Faça login para adicionar um animal.')),
                   );
                 } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const AddAnimalPage()),
-                  );
+                  await _abrirPaginaCadastro();
                 }
               },
               backgroundColor: Colors.blue,

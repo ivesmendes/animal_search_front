@@ -1,16 +1,48 @@
-# animal_search_front
+🐾 Animal Search
 
-A new Flutter project.
+Bem-vindo ao repositório do projeto Animal Search!
 
-## Getting Started
+Este aplicativo Flutter tem como objetivo ajudar usuários a encontrar e compartilhar informações sobre animais, utilizando mapas, upload de imagens e notificações locais. Abaixo você encontrará um guia completo de configuração do ambiente, instalação de dependências e execução do app.
 
-This project is a starting point for a Flutter application.
+---
 
-A few resources to get you started if this is your first Flutter project:
+📦 Pré-requisitos,
+Antes de começar, certifique-se de que seu ambiente de desenvolvimento atende aos seguintes requisitos:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+✅ Ferramentas Necessárias,
+Flutter SDK 3.7.0 ou superior
+Verifique com:
+```bash
+flutter --version,
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Firebase CLI,
+Instale via NPM:
+
+npm install -g firebase-tools
+firebase login
+
+
+
+⚙️ Configuração do Projeto
+
+🔹 1. Clone o repositório:
+git clone https://github.com/ivesmendes/animal_search_front.git
+cd animal_search
+
+🔹 2. Instale as dependências:
+flutter pub get
+
+Integre com Firebase,
+flutterfire configure
+
+
+Rode a aplicação,
+flutter run
+
+integrantes:
+
+Guilherme Ruben Pereira Matos
+Ives Leonardo Mendes Lima
+Jose Lucas Marques Silva
+Gabriel Lages Oliveira de Azevedo
+Pablo Ferreira de Andrade Farias
