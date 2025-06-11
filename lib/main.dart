@@ -5,11 +5,17 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'screens/map_screen.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import './services/message_listener.dart'; // <- novo import
+
+// Instância global do plugin de notificações locais
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Fix para o erro de type cast
+  // Fix para o erro de type cast no uso do emulador de auth
   try {
     await FirebaseAuth.instance.useAuthEmulator('localhost', 9099);
   } catch (e) {
@@ -30,9 +36,10 @@ void main() async {
       await FirebaseAppCheck.instance.activate(
         androidProvider: AndroidProvider.debug,
         appleProvider: AppleProvider.debug,
-        webProvider: ReCaptchaV3Provider('6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'),
+        webProvider: ReCaptchaV3Provider(
+          '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI',
+        ),
       );
-      
       debugPrint('🔐 Modo debug ativado para App Check');
     } else {
       await FirebaseAppCheck.instance.activate(
@@ -41,7 +48,19 @@ void main() async {
       );
     }
 
+    // Inicializa notificações locais
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
+
+    await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
     runApp(const MyApp());
+
+    // Inicia escuta global de mensagens após inicialização
+    MessageListenerService.startListening();
   } catch (e) {
     debugPrint('🔥 Erro na inicialização: $e');
     runApp(const ErrorApp());

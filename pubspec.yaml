@@ -28,6 +28,7 @@ dependencies:
   cached_network_image: ^3.2.3
   share_plus: ^7.0.2
   url_launcher: ^6.1.11
+  flutter_local_notifications: ^17.1.0
 
 dev_dependencies:
   flutter_test:

@@ -1,21 +1,20 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-import 'chat_screen.dart'; // Importa a tela de chat
+import 'chat_screen.dart';
 
 class AnimalDetailsView extends StatelessWidget {
   final Map<String, dynamic> animalData;
   final String animalId;
 
   const AnimalDetailsView({
-    Key? key,
+    super.key,
     required this.animalData,
     required this.animalId,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -74,24 +73,6 @@ class AnimalDetailsView extends StatelessWidget {
                       errorWidget: (context, url, error) => Container(
                         color: Colors.grey.shade200,
                         child: Icon(Icons.pets, size: 60, color: mainColor),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 80,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            Colors.black.withOpacity(0.4),
-                            Colors.transparent,
-                          ],
-                        ),
                       ),
                     ),
                   ),
@@ -211,7 +192,7 @@ class AnimalDetailsView extends StatelessWidget {
                           context,
                           icon: Icons.chat,
                           label: 'Abrir Chat',
-                          onTap: () => _contactPoster(context, animalData),
+                          onTap: () => _contactPoster(context),
                           color: mainColor,
                           isPrimary: true,
                         ),
@@ -318,11 +299,13 @@ class AnimalDetailsView extends StatelessWidget {
     );
   }
 
-  void _contactPoster(BuildContext context, Map<String, dynamic> animalData) async {
+  void _contactPoster(BuildContext context) async {
     final currentUser = FirebaseAuth.instance.currentUser;
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
     final String? otherUserId = animalData['usuario_uid'];
+    final String animalId = this.animalId;
+
     if (currentUser == null || otherUserId == null || currentUser.uid == otherUserId) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Não é possível iniciar chat.')),
@@ -337,8 +320,10 @@ class AnimalDetailsView extends StatelessWidget {
 
     DocumentSnapshot? existingChat;
     for (var doc in chatQuery.docs) {
-      final usuarios = doc['usuarios'] as List;
-      if (usuarios.contains(otherUserId)) {
+      final data = doc.data() as Map<String, dynamic>;
+      final usuarios = data['usuarios'] as List;
+      final docAnimalId = data['animal_id'];
+      if (usuarios.contains(otherUserId) && docAnimalId == animalId) {
         existingChat = doc;
         break;
       }
@@ -349,6 +334,7 @@ class AnimalDetailsView extends StatelessWidget {
       final newChat = await firestore.collection('chats').add({
         'usuarios': [currentUser.uid, otherUserId],
         'ultimo_msg': '',
+        'animal_id': animalId,
       });
       chatId = newChat.id;
     } else {
@@ -365,6 +351,7 @@ class AnimalDetailsView extends StatelessWidget {
           chatId: chatId,
           otherUserId: otherUserId,
           otherUserName: otherUserName,
+          animalId: animalId,
         ),
       ));
     }

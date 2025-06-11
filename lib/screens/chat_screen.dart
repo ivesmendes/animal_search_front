@@ -1,6 +1,9 @@
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import '../main.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -51,8 +54,10 @@ class _ChatScreenState extends State<ChatScreen> {
             itemCount: chats.length,
             itemBuilder: (context, index) {
               final chatDoc = chats[index];
-              final List usuarios = chatDoc['usuarios'];
+              final data = chatDoc.data() as Map<String, dynamic>;
+              final List usuarios = data['usuarios'];
               final otherUserId = usuarios.firstWhere((uid) => uid != currentUser!.uid);
+              final animalId = data['animal_id'] ?? ''; // trata ausência
 
               return FutureBuilder<DocumentSnapshot>(
                 future: firestore.collection('usuarios').doc(otherUserId).get(),
@@ -64,7 +69,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
                   return ListTile(
                     title: Text(nome),
-                    subtitle: Text(chatDoc['ultimo_msg'] ?? ''),
+                    subtitle: Text(data['ultimo_msg'] ?? ''),
                     onTap: () {
                       Navigator.push(
                         context,
@@ -73,6 +78,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             chatId: chatDoc.id,
                             otherUserId: otherUserId,
                             otherUserName: nome,
+                            animalId: animalId,
                           ),
                         ),
                       );
@@ -92,12 +98,14 @@ class ChatPage extends StatefulWidget {
   final String chatId;
   final String otherUserId;
   final String otherUserName;
+  final String animalId;
 
   const ChatPage({
     super.key,
     required this.chatId,
     required this.otherUserId,
     required this.otherUserName,
+    required this.animalId,
   });
 
   @override
@@ -108,8 +116,9 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _msgController = TextEditingController();
   final currentUser = FirebaseAuth.instance.currentUser;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
+  List<String> mensagensExibidas = [];
 
-  void enviarMensagem() async {
+  Future<void> enviarMensagem() async {
     final texto = _msgController.text.trim();
     if (texto.isEmpty || currentUser == null) return;
 
@@ -126,6 +135,24 @@ class _ChatPageState extends State<ChatPage> {
     _msgController.clear();
   }
 
+  Future<void> showLocalNotification(String title, String body) async {
+    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'chat_channel',
+      'Mensagens',
+      importance: Importance.max,
+      priority: Priority.high,
+    );
+
+    const NotificationDetails notificationDetails = NotificationDetails(android: androidDetails);
+
+    await flutterLocalNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      notificationDetails,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (currentUser == null) return const SizedBox();
@@ -137,6 +164,42 @@ class _ChatPageState extends State<ChatPage> {
       ),
       body: Column(
         children: [
+          if (widget.animalId.isNotEmpty)
+            FutureBuilder<DocumentSnapshot>(
+              future: firestore.collection('animais_perdidos').doc(widget.animalId).get(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) return const SizedBox();
+                final data = snapshot.data!.data() as Map<String, dynamic>? ?? {};
+                return Container(
+                  color: Colors.grey.shade100,
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.network(
+                          data['imagem_url'] ?? '',
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(data['tipo'] ?? 'Tipo desconhecido', style: const TextStyle(fontWeight: FontWeight.bold)),
+                            Text('Raça: ${data['raca'] ?? 'Não informada'}'),
+                            Text('Cor: ${data['cor'] ?? 'Não informada'}'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: firestore
@@ -154,8 +217,15 @@ class _ChatPageState extends State<ChatPage> {
                   reverse: true,
                   itemCount: mensagens.length,
                   itemBuilder: (context, index) {
-                    final msg = mensagens[index].data() as Map<String, dynamic>;
+                    final doc = mensagens[index];
+                    final msg = doc.data() as Map<String, dynamic>;
                     final isMinhaMsg = msg['remetenteId'] == currentUser!.uid;
+                    final msgTexto = msg['texto'] ?? '';
+
+                    if (!isMinhaMsg && !mensagensExibidas.contains(doc.id)) {
+                      mensagensExibidas.add(doc.id);
+                      showLocalNotification(widget.otherUserName, msgTexto);
+                    }
 
                     return Align(
                       alignment: isMinhaMsg ? Alignment.centerRight : Alignment.centerLeft,
@@ -167,7 +237,7 @@ class _ChatPageState extends State<ChatPage> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Text(
-                          msg['texto'] ?? '',
+                          msgTexto,
                           style: TextStyle(
                             color: isMinhaMsg ? Colors.white : Colors.black87,
                           ),
