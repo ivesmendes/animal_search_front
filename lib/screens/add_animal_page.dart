@@ -30,6 +30,7 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
   final _descriptionController = TextEditingController();
   final _dateController = TextEditingController();
   String _selectedSize = 'Pequeno';
+  String _animalCondition = 'Perdido'; // <- nova variável
   GoogleMapController? _mapController;
 
   void _pickImage() async {
@@ -112,6 +113,7 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
           'raca': _breedController.text,
           'cor': _colorController.text,
           'porte': _selectedSize,
+          'condicao': _animalCondition, // <- nova linha
           'data-visto': _dateController.text,
           'descricao': _descriptionController.text,
           'latitude': _pickedLocation!.latitude,
@@ -128,7 +130,7 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Animal cadastrado com sucesso!')),
         );
-        Navigator.pop(context, true); // <- importante para atualizar o mapa
+        Navigator.pop(context, true); // <- atualiza o mapa
       } catch (e) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
@@ -162,6 +164,7 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
                 _buildTextFieldController(_breedController, 'Raça'),
                 _buildTextFieldController(_colorController, 'Cor predominante'),
                 _buildDropdownPorte(),
+                _buildDropdownCondicao(), // <- novo campo
                 _buildDataField(),
                 _buildDescricaoField(),
               ]),
@@ -269,6 +272,24 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
           if (_animalType != 'Outro') _otherAnimalType = null;
         });
       },
+    );
+  }
+
+  Widget _buildDropdownCondicao() {
+    return DropdownButtonFormField<String>(
+      value: _animalCondition,
+      decoration: const InputDecoration(labelText: 'Condição do animal'),
+      items: const [
+        DropdownMenuItem(value: 'Perdido', child: Text('Perdido')),
+        DropdownMenuItem(value: 'Adoção', child: Text('Adoção')),
+        DropdownMenuItem(value: 'De rua', child: Text('De rua')),
+      ],
+      onChanged: (value) {
+        setState(() {
+          _animalCondition = value!;
+        });
+      },
+      validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
     );
   }
 

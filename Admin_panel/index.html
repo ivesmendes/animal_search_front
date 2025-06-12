@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Administrativo Animal Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f8fa;
+            color: #333;
+            padding: 20px;
+        }
+        .pedido {
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            background: #fff;
+            margin-bottom: 20px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        .pedido img {
+            width: 200px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .acoes {
+            margin-left: auto;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-weight: bold;
+        }
+        .confirmar { background-color: #4CAF50; }
+        .ignorar { background-color: #F44336; }
+    </style>
+</head>
+<body>
+    <h2>Painel Administrativo Animal Search</h2>
+
+    <div id="lista-pedidos"></div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+
+    <!-- JS próprio -->
+    <script src="script.js"></script>
+</body>
+</html>
