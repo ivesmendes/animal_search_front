@@ -31,7 +31,7 @@ function carregarPedidos() {
                 pedido.innerHTML = `
                     <div>
                         <strong>ID Animal:</strong> ${dados.animal_id}<br>
-                        <strong>Condição:</strong> ${dados.animal_condicao || 'não informada'}
+                        <strong>Condição:</strong> ${dados.condicao || 'não informada'}<br>
                     </div>
                     <img src="${dados.imagem_url_antiga}" alt="Imagem Antiga">
                     <img src="${dados.imagem_url_nova}" alt="Imagem Nova">
