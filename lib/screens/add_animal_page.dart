@@ -144,7 +144,7 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
                 const Text(
                   'Cadastrando animal...',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: primaryBlue,
                   ),
