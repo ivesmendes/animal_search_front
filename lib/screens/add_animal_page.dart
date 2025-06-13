@@ -30,8 +30,15 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
   final _descriptionController = TextEditingController();
   final _dateController = TextEditingController();
   String _selectedSize = 'Pequeno';
-  String _animalCondition = 'Perdido'; // <- nova variável
+  String _animalCondition = 'Perdido';
   GoogleMapController? _mapController;
+
+  // Cores do tema azul
+  static const Color primaryBlue = Color(0xFF2563eb);
+  static const Color lightBlue = Color(0xFF3b82f6);
+  static const Color accentBlue = Color(0xFF60a5fa);
+  static const Color backgroundBlue = Color(0xFFf0f9ff);
+  static const Color cardBlue = Color(0xFFfafbff);
 
   void _pickImage() async {
     final picker = ImagePicker();
@@ -55,6 +62,19 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2023),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: primaryBlue,
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (pickedDate != null) {
@@ -98,7 +118,41 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
+        builder: (_) => Center(
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            margin: const EdgeInsets.symmetric(horizontal: 40),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: primaryBlue.withOpacity(0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+                  strokeWidth: 3,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Cadastrando animal...',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: primaryBlue,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       );
 
       try {
@@ -113,7 +167,7 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
           'raca': _breedController.text,
           'cor': _colorController.text,
           'porte': _selectedSize,
-          'condicao': _animalCondition, // <- nova linha
+          'condicao': _animalCondition,
           'data-visto': _dateController.text,
           'descricao': _descriptionController.text,
           'latitude': _pickedLocation!.latitude,
@@ -126,20 +180,47 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
 
         await FirebaseFirestore.instance.collection('animais_perdidos').add(animalData);
 
-        Navigator.of(context).pop(); // fecha o dialog de carregamento
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Animal cadastrado com sucesso!')),
+          SnackBar(
+            content: const Text(
+              'Animal cadastrado com sucesso!',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: primaryBlue,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
-        Navigator.pop(context, true); // <- atualiza o mapa
+        Navigator.pop(context, true);
       } catch (e) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao cadastrar: $e')),
+          SnackBar(
+            content: Text(
+              'Erro ao cadastrar: $e',
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
         );
       }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Preencha todos os campos, selecione uma localização e uma foto.')),
+        SnackBar(
+          content: const Text(
+            'Preencha todos os campos, selecione uma localização e uma foto.',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
+          backgroundColor: Colors.orange.shade600,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }
@@ -147,89 +228,75 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: backgroundBlue,
       appBar: AppBar(
-        title: const Text('Cadastrar Animal Perdido'),
-        backgroundColor: Colors.lightBlue,
+        elevation: 0,
+        backgroundColor: primaryBlue,
+        foregroundColor: Colors.white,
+        title: const Text(
+          'Cadastrar Animal',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        centerTitle: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            bottom: Radius.circular(24),
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const SizedBox(height: 10),
+              _buildSectionTitle('Informações do Animal', Icons.pets),
+              const SizedBox(height: 16),
               _buildCard([
                 _buildDropdownTipoAnimal(),
-                if (_animalType == 'Outro') _buildTextField(_otherAnimalType, 'Informe o tipo', (v) => _otherAnimalType = v),
+                const SizedBox(height: 20),
+                if (_animalType == 'Outro') ...[
+                  _buildTextField(_otherAnimalType, 'Informe o tipo', (v) => _otherAnimalType = v),
+                  const SizedBox(height: 20),
+                ],
                 _buildTextFieldController(_breedController, 'Raça'),
+                const SizedBox(height: 20),
                 _buildTextFieldController(_colorController, 'Cor predominante'),
+                const SizedBox(height: 20),
                 _buildDropdownPorte(),
-                _buildDropdownCondicao(), // <- novo campo
+                const SizedBox(height: 20),
+                _buildDropdownCondicao(),
+                const SizedBox(height: 20),
                 _buildDataField(),
+                const SizedBox(height: 20),
                 _buildDescricaoField(),
               ]),
+              
+              const SizedBox(height: 28),
+              _buildSectionTitle('Localização', Icons.location_on),
               const SizedBox(height: 16),
-              _buildCard([
-                const Text("Toque no mapa para marcar a localização:"),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 200,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Listener(
-                      onPointerDown: (_) => _mapController?.setMapStyle(null),
-                      child: GoogleMap(
-                        onMapCreated: (controller) => _mapController = controller,
-                        onTap: _onMapTap,
-                        initialCameraPosition: const CameraPosition(
-                          target: LatLng(-5.0892, -42.8016),
-                          zoom: 13,
-                        ),
-                        myLocationEnabled: true,
-                        myLocationButtonEnabled: true,
-                        zoomGesturesEnabled: true,
-                        scrollGesturesEnabled: true,
-                        rotateGesturesEnabled: true,
-                        tiltGesturesEnabled: true,
-                        gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                          Factory<OneSequenceGestureRecognizer>(
-                              () => EagerGestureRecognizer()),
-                        },
-                        markers: _pickedLocation != null
-                            ? {
-                                Marker(
-                                  markerId: const MarkerId('picked'),
-                                  position: _pickedLocation!,
-                                )
-                              }
-                            : {},
-                      ),
-                    ),
-                  ),
-                ),
-              ]),
+              _buildMapCard(),
+              
+              const SizedBox(height: 28),
+              _buildSectionTitle('Foto do Animal', Icons.camera_alt),
               const SizedBox(height: 16),
-              if (_image != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.file(_image!, height: 160),
-                )
-              else
-                _buildActionButton(
-                  context,
-                  icon: Icons.image,
-                  label: 'Selecionar foto do animal',
-                  onTap: _pickImage,
-                  color: Colors.blueAccent,
-                ),
-              const SizedBox(height: 24),
+              _buildImageSection(),
+              
+              const SizedBox(height: 36),
               _buildActionButton(
                 context,
                 icon: Icons.pets,
                 label: 'Cadastrar Animal',
                 onTap: _submit,
-                color: Colors.lightBlue,
+                color: primaryBlue,
               ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -237,30 +304,292 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
     );
   }
 
+  Widget _buildSectionTitle(String title, IconData icon) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: accentBlue.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: primaryBlue, size: 22),
+        ),
+        const SizedBox(width: 14),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: primaryBlue,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCard(List<Widget> children) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
+        color: cardBlue,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: primaryBlue.withOpacity(0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
           ),
         ],
+        border: Border.all(
+          color: accentBlue.withOpacity(0.2),
+          width: 1,
+        ),
       ),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildMapCard() {
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBlue,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: primaryBlue.withOpacity(0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+        ],
+        border: Border.all(
+          color: accentBlue.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.touch_app, color: primaryBlue, size: 20),
+                const SizedBox(width: 10),
+                const Text(
+                  "Toque no mapa para marcar a localização:",
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: primaryBlue,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(
+              height: 300,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: accentBlue.withOpacity(0.3),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryBlue.withOpacity(0.12),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Stack(
+                  children: [
+                    GoogleMap(
+                      onMapCreated: (controller) => _mapController = controller,
+                      onTap: _onMapTap,
+                      initialCameraPosition: const CameraPosition(
+                        target: LatLng(-5.0892, -42.8016),
+                        zoom: 13,
+                      ),
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: true,
+                      zoomGesturesEnabled: true,
+                      scrollGesturesEnabled: true,
+                      rotateGesturesEnabled: true,
+                      tiltGesturesEnabled: true,
+                      gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                        Factory<OneSequenceGestureRecognizer>(
+                            () => EagerGestureRecognizer()),
+                      },
+                      markers: _pickedLocation != null
+                          ? {
+                              Marker(
+                                markerId: const MarkerId('picked'),
+                                position: _pickedLocation!,
+                                icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+                              )
+                            }
+                          : {},
+                    ),
+                    if (_pickedLocation != null)
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: primaryBlue,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: primaryBlue.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.white, size: 18),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'Localização marcada',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImageSection() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: cardBlue,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: primaryBlue.withOpacity(0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+        ],
+        border: Border.all(
+          color: accentBlue.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: _image != null
+            ? Column(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.file(
+                      _image!,
+                      height: 220,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextButton.icon(
+                    onPressed: _pickImage,
+                    icon: Icon(Icons.edit, color: primaryBlue, size: 20),
+                    label: Text(
+                      'Alterar foto',
+                      style: TextStyle(
+                        color: primaryBlue,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      backgroundColor: accentBlue.withOpacity(0.1),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+            : GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  height: 140,
+                  decoration: BoxDecoration(
+                    color: accentBlue.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: accentBlue.withOpacity(0.3),
+                      width: 2,
+                      style: BorderStyle.solid,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.add_a_photo,
+                        size: 48,
+                        color: primaryBlue,
+                      ),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'Selecionar foto do animal',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: primaryBlue,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Toque para escolher uma imagem',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: primaryBlue.withOpacity(0.7),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+      ),
     );
   }
 
   Widget _buildDropdownTipoAnimal() {
     return DropdownButtonFormField<String>(
       value: _animalType,
-      decoration: const InputDecoration(labelText: 'Tipo de animal'),
+      decoration: _buildInputDecoration('Tipo de animal'),
+      dropdownColor: Colors.white,
       items: const [
         DropdownMenuItem(value: 'Cachorro', child: Text('Cachorro')),
         DropdownMenuItem(value: 'Gato', child: Text('Gato')),
@@ -278,7 +607,8 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
   Widget _buildDropdownCondicao() {
     return DropdownButtonFormField<String>(
       value: _animalCondition,
-      decoration: const InputDecoration(labelText: 'Condição do animal'),
+      decoration: _buildInputDecoration('Condição do animal'),
+      dropdownColor: Colors.white,
       items: const [
         DropdownMenuItem(value: 'Perdido', child: Text('Perdido')),
         DropdownMenuItem(value: 'Adoção', child: Text('Adoção')),
@@ -293,26 +623,11 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
     );
   }
 
-  Widget _buildTextFieldController(TextEditingController controller, String label) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(labelText: label),
-      validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
-    );
-  }
-
-  Widget _buildTextField(String? value, String label, void Function(String)? onChanged) {
-    return TextFormField(
-      decoration: InputDecoration(labelText: label),
-      onChanged: onChanged,
-      validator: (v) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
-    );
-  }
-
   Widget _buildDropdownPorte() {
     return DropdownButtonFormField<String>(
       value: _selectedSize,
-      decoration: const InputDecoration(labelText: 'Porte'),
+      decoration: _buildInputDecoration('Porte'),
+      dropdownColor: Colors.white,
       items: const [
         DropdownMenuItem(value: 'Pequeno', child: Text('Pequeno')),
         DropdownMenuItem(value: 'Médio', child: Text('Médio')),
@@ -322,11 +637,30 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
     );
   }
 
+  Widget _buildTextFieldController(TextEditingController controller, String label) {
+    return TextFormField(
+      controller: controller,
+      decoration: _buildInputDecoration(label),
+      validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
+    );
+  }
+
+  Widget _buildTextField(String? value, String label, void Function(String)? onChanged) {
+    return TextFormField(
+      decoration: _buildInputDecoration(label),
+      onChanged: onChanged,
+      validator: (v) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
+    );
+  }
+
   Widget _buildDataField() {
     return TextFormField(
       controller: _dateController,
       readOnly: true,
-      decoration: const InputDecoration(labelText: 'Data em que foi visto', hintText: 'DD/MM/AAAA'),
+      decoration: _buildInputDecoration('Data em que foi visto').copyWith(
+        hintText: 'DD/MM/AAAA',
+        suffixIcon: Icon(Icons.calendar_today, color: primaryBlue, size: 20),
+      ),
       onTap: _pickDate,
       validator: (value) => value == null || value.isEmpty ? 'Campo obrigatório' : null,
     );
@@ -335,8 +669,41 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
   Widget _buildDescricaoField() {
     return TextFormField(
       controller: _descriptionController,
-      decoration: const InputDecoration(labelText: 'Descrição adicional'),
+      decoration: _buildInputDecoration('Descrição adicional'),
       maxLines: 3,
+    );
+  }
+
+  InputDecoration _buildInputDecoration(String label) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(
+        color: primaryBlue.withOpacity(0.8),
+        fontWeight: FontWeight.w500,
+      ),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: accentBlue.withOpacity(0.3)),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: accentBlue.withOpacity(0.3)),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: BorderSide(color: primaryBlue, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Colors.red),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(16),
+        borderSide: const BorderSide(color: Colors.red, width: 2),
+      ),
+      filled: true,
+      fillColor: Colors.white,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
     );
   }
 
@@ -345,25 +712,44 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
       required String label,
       required VoidCallback onTap,
       required Color color}) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        margin: const EdgeInsets.symmetric(horizontal: 20),
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(30),
+    return Container(
+      width: double.infinity,
+      height: 60,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [primaryBlue, lightBlue],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: Colors.white),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            )
-          ],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: primaryBlue.withOpacity(0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white, size: 26),
+              const SizedBox(width: 14),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 17,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

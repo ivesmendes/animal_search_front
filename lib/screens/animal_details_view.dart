@@ -30,129 +30,212 @@ class AnimalDetailsView extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 20, offset: const Offset(0, -5))],
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.blue.shade50,
+            Colors.white,
+          ],
+        ),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32), 
+          topRight: Radius.circular(32)
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.1),
+            blurRadius: 30,
+            offset: const Offset(0, -10),
+            spreadRadius: 5,
+          )
+        ],
       ),
       child: ClipRRect(
-        borderRadius: const BorderRadius.only(topLeft: Radius.circular(24), topRight: Radius.circular(24)),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32), 
+          topRight: Radius.circular(32)
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // handle drag handle
+            // Enhanced drag handle
             Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(2)),
+              margin: const EdgeInsets.only(top: 16),
+              width: 50,
+              height: 5,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade300, Colors.blue.shade500],
+                ),
+                borderRadius: BorderRadius.circular(3),
+              ),
             ),
 
-            // imagem
+            // Enhanced image section
             if (imageUrl != null && imageUrl.isNotEmpty)
               Stack(
                 children: [
-                  Hero(
-                    tag: 'animal_image_$animalId',
-                    child: CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      height: size.height * 0.3,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      placeholder: (_, __) => Container(color: Colors.grey.shade200, child: const Center(child: CircularProgressIndicator())),
-                      errorWidget: (_, __, ___) => Container(color: Colors.grey.shade200, child: Icon(Icons.pets, size: 60, color: mainColor)),
+                  Container(
+                    margin: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.2),
+                          blurRadius: 20,
+                          offset: const Offset(0, 8),
+                        )
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Hero(
+                        tag: 'animal_image_$animalId',
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          height: size.height * 0.3,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.blue.shade100, Colors.blue.shade200],
+                              ),
+                            ),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade600),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [Colors.blue.shade100, Colors.blue.shade200],
+                              ),
+                            ),
+                            child: Icon(Icons.pets, size: 60, color: Colors.blue.shade600),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                   Positioned(
-                    top: 16,
-                    right: 16,
+                    top: 32,
+                    right: 32,
                     child: GestureDetector(
                       onTap: () {
                         HapticFeedback.lightImpact();
                         Navigator.of(context).pop();
                       },
                       child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.9), shape: BoxShape.circle),
-                        child: const Icon(Icons.close, color: Colors.black87, size: 20),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.2),
+                              blurRadius: 15,
+                              offset: const Offset(0, 4),
+                            )
+                          ],
+                        ),
+                        child: Icon(Icons.close, color: Colors.blue.shade700, size: 24),
                       ),
                     ),
                   ),
                 ],
               ),
 
-            // conteúdo
+            // Enhanced content section
             Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                // título e chip
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(child: Text(tipo, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold))),
-                    _buildConditionChip(condicao),
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Enhanced title and chip section
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.blue.withOpacity(0.08),
+                          blurRadius: 20,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            tipo,
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade800,
+                            ),
+                          ),
+                        ),
+                        _buildConditionChip(condicao),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  _buildInfoSection(mainColor),
+                  const SizedBox(height: 20),
+                  
+                  if ((animalData['descricao'] as String?)?.isNotEmpty ?? false)
+                    _buildDescricao(animalData['descricao'] as String),
+                  
+                  const SizedBox(height: 20),
+                  
+                  if (animalData['usuario_nome'] != null)
+                    _buildUsuarioCard(mainColor),
+                  
+                  const SizedBox(height: 32),
+
+                  // Enhanced action buttons
+                  if (animalData['usuario_uid'] != currentUserUid) ...[
+                    _buildActionButton(
+                      context,
+                      icon: Icons.chat_bubble_rounded,
+                      label: 'Abrir Chat',
+                      onTap: () => _contactPoster(context),
+                      color: Colors.blue.shade600,
+                      isPrimary: true,
+                    ),
+                    const SizedBox(height: 16),
                   ],
-                ),
 
-                const SizedBox(height: 16),
-                _buildInfoSection(mainColor),
-                const SizedBox(height: 20),
-                if ((animalData['descricao'] as String?)?.isNotEmpty ?? false)
-                  _buildDescricao(animalData['descricao'] as String),
-                const SizedBox(height: 24),
-                if (animalData['usuario_nome'] != null)
-                  _buildUsuarioCard(mainColor),
-                const SizedBox(height: 24),
-
-                // 1) Botão de Chat: somente para outros usuários
-                if (animalData['usuario_uid'] != currentUserUid) ...[
-                  Center(
-                    child: SizedBox(
-                      width: size.width * 0.6,
-                      child: _buildActionButton(
-                        context,
-                        icon: Icons.chat,
-                        label: 'Abrir Chat',
-                        onTap: () => _contactPoster(context),
-                        color: mainColor,
-                        isPrimary: true,
-                      ),
+                  if (condicao == 'perdido')
+                    _buildActionButton(
+                      context,
+                      icon: Icons.check_circle_rounded,
+                      label: 'Marcar como Achado',
+                      onTap: () => _sendFoundProof(context),
+                      color: Colors.red.shade500,
+                      isPrimary: false,
+                    )
+                  else if (condicao == 'adoção' || condicao == 'de rua')
+                    _buildActionButton(
+                      context,
+                      icon: Icons.home_rounded,
+                      label: 'Marcar como Adotado',
+                      onTap: () => _sendFoundProof(context),
+                      color: Colors.green.shade500,
+                      isPrimary: false,
                     ),
-                  ),
-                  const SizedBox(height: 16),
+
+                  const SizedBox(height: 20),
                 ],
-
-                // 2) Botão Achado/Adotado: sempre que a condição for aplicável
-                if (condicao == 'perdido')
-                  Center(
-                    child: SizedBox(
-                      width: size.width * 0.6,
-                      child: _buildActionButton(
-                        context,
-                        icon: Icons.check_circle,
-                        label: 'Achado',
-                        onTap: () => _sendFoundProof(context),
-                        color: Colors.red,
-                        isPrimary: false,
-                      ),
-                    ),
-                  )
-                else if (condicao == 'adoção' || condicao == 'de rua')
-                  Center(
-                    child: SizedBox(
-                      width: size.width * 0.6,
-                      child: _buildActionButton(
-                        context,
-                        icon: Icons.home,
-                        label: 'Adotado',
-                        onTap: () => _sendFoundProof(context),
-                        color: Colors.blue,
-                        isPrimary: false,
-                      ),
-                    ),
-                  ),
-
-                const SizedBox(height: 20),
-              ]),
+              ),
             ),
           ],
         ),
@@ -161,58 +244,170 @@ class AnimalDetailsView extends StatelessWidget {
   }
 
   Widget _buildInfoSection(Color color) => Container(
-        decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(16)),
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          _buildDetailRow(Icons.pets, 'Raça', animalData['raca'] as String? ?? 'Não informada', color),
-          const Divider(height: 24),
-          _buildDetailRow(Icons.palette, 'Cor', animalData['cor'] as String? ?? 'Não informada', color),
-          const Divider(height: 24),
-          _buildDetailRow(Icons.straighten, 'Porte', animalData['porte'] as String? ?? 'Não informado', color),
-          const Divider(height: 24),
-          _buildDetailRow(Icons.calendar_today, 'Visto em', animalData['data-visto'] as String? ?? 'Não informada', color),
-        ]),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            _buildDetailRow(Icons.pets, 'Raça', animalData['raca'] as String? ?? 'Não informada', Colors.blue.shade600),
+            const SizedBox(height: 20),
+            Divider(color: Colors.blue.shade100, thickness: 1),
+            const SizedBox(height: 20),
+            _buildDetailRow(Icons.palette, 'Cor', animalData['cor'] as String? ?? 'Não informada', Colors.blue.shade600),
+            const SizedBox(height: 20),
+            Divider(color: Colors.blue.shade100, thickness: 1),
+            const SizedBox(height: 20),
+            _buildDetailRow(Icons.straighten, 'Porte', animalData['porte'] as String? ?? 'Não informado', Colors.blue.shade600),
+            const SizedBox(height: 20),
+            Divider(color: Colors.blue.shade100, thickness: 1),
+            const SizedBox(height: 20),
+            _buildDetailRow(Icons.calendar_today, 'Visto em', animalData['data-visto'] as String? ?? 'Não informada', Colors.blue.shade600),
+          ],
+        ),
       );
 
-  Widget _buildDescricao(String texto) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildDescricao(String texto) => Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blue.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            )
+          ],
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Descrição',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.blue.shade800,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              texto,
+              style: TextStyle(
+                color: Colors.grey.shade700,
+                height: 1.6,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildUsuarioCard(Color color) => Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.blue.shade50, Colors.blue.shade100],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: Colors.blue.shade200, width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.blue.shade500, Colors.blue.shade600],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.person, color: Colors.white, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                animalData['usuario_nome'] as String,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.blue.shade800,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _buildDetailRow(IconData icon, String label, String value, Color color) => Row(
         children: [
-          const Text('Descrição', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(12)),
-            child: Text(texto, style: TextStyle(color: Colors.grey.shade800, height: 1.5)),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
+              ),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, size: 24, color: color),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.blue.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                    color: Colors.grey.shade800,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       );
 
-  Widget _buildUsuarioCard(Color color) => Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-        child: Row(children: [
-          CircleAvatar(backgroundColor: color, child: const Icon(Icons.person, color: Colors.white)),
-          const SizedBox(width: 16),
-          Expanded(child: Text(animalData['usuario_nome'] as String, style: const TextStyle(fontWeight: FontWeight.bold))),
-        ]),
-      );
-
-  Widget _buildDetailRow(IconData icon, String label, String value, Color color) => Row(children: [
-        Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(8)), child: Icon(icon, size: 20, color: color)),
-        const SizedBox(width: 16),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-          const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
-        ])),
-      ]);
-
   Widget _buildConditionChip(String cond) {
     final color = _getConditionColor(cond);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(30), border: Border.all(color: color.withOpacity(0.3))),
-      child: Text(cond.toUpperCase(), style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12)),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withOpacity(0.1), color.withOpacity(0.2)],
+        ),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+      ),
+      child: Text(
+        cond.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+          letterSpacing: 0.5,
+        ),
+      ),
     );
   }
 
@@ -230,20 +425,48 @@ class AnimalDetailsView extends StatelessWidget {
           onTap();
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 16),
           decoration: BoxDecoration(
-            color: isPrimary ? color : Colors.transparent,
-            borderRadius: BorderRadius.circular(30),
-            border: isPrimary ? null : Border.all(color: color),
+            gradient: isPrimary
+                ? LinearGradient(
+                    colors: [color, color.withOpacity(0.8)],
+                  )
+                : null,
+            color: isPrimary ? null : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: isPrimary ? null : Border.all(color: color, width: 2),
+            boxShadow: [
+              BoxShadow(
+                color: isPrimary ? color.withOpacity(0.3) : Colors.grey.withOpacity(0.1),
+                blurRadius: isPrimary ? 15 : 10,
+                offset: const Offset(0, 6),
+              )
+            ],
           ),
-          child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            Icon(icon, size: 20, color: isPrimary ? Colors.white : color),
-            const SizedBox(width: 8),
-            Text(label, style: TextStyle(color: isPrimary ? Colors.white : color, fontWeight: FontWeight.bold)),
-          ]),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 24,
+                color: isPrimary ? Colors.white : color,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: TextStyle(
+                  color: isPrimary ? Colors.white : color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
         ),
       );
 
+  // Keep your existing methods unchanged
   Future<void> _sendFoundProof(BuildContext context) async {
     final picker = ImagePicker();
     final picked = await picker.pickImage(source: ImageSource.gallery);
@@ -318,23 +541,23 @@ class AnimalDetailsView extends StatelessWidget {
 
   Color _getColorForAnimalType(String tipo) {
     final t = tipo.toLowerCase();
-    if (t.contains('cachorro') || t.contains('cão')) return Colors.blue;
-    if (t.contains('gato')) return Colors.purple;
-    if (t.contains('ave') || t.contains('pássaro')) return Colors.green;
-    if (t.contains('coelho')) return Colors.pink;
-    return Colors.lightBlue;
+    if (t.contains('cachorro') || t.contains('cão')) return Colors.blue.shade600;
+    if (t.contains('gato')) return Colors.purple.shade600;
+    if (t.contains('ave') || t.contains('pássaro')) return Colors.green.shade600;
+    if (t.contains('coelho')) return Colors.pink.shade600;
+    return Colors.blue.shade600;
   }
 
   Color _getConditionColor(String? cond) {
     switch ((cond ?? '').toLowerCase()) {
       case 'perdido':
-        return Colors.red;
+        return Colors.red.shade600;
       case 'adoção':
-        return Colors.blue;
+        return Colors.blue.shade600;
       case 'de rua':
-        return Colors.orange;
+        return Colors.orange.shade600;
       default:
-        return Colors.grey;
+        return Colors.grey.shade600;
     }
   }
 }
