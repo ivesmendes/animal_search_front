@@ -10,6 +10,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:animal_search/services/geofire_services.dart';
+import 'package:animal_search/screens/confirm_duplicates_page.dart';
 
 class AddAnimalPage extends StatefulWidget {
   const AddAnimalPage({Key? key}) : super(key: key);
@@ -113,74 +115,86 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
     }
   }
 
-  void _submit() async {
-    if (_formKey.currentState!.validate() && _pickedLocation != null && _image != null) {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => Center(
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            margin: const EdgeInsets.symmetric(horizontal: 40),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: primaryBlue.withOpacity(0.2),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
+void _submit() async {
+  if (_formKey.currentState!.validate() && _pickedLocation != null && _image != null) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Center(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          margin: const EdgeInsets.symmetric(horizontal: 40),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: primaryBlue.withOpacity(0.2),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(
+                valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
+                strokeWidth: 3,
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Cadastrando animal...',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: primaryBlue,
                 ),
-              ],
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(primaryBlue),
-                  strokeWidth: 3,
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  'Cadastrando animal...',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: primaryBlue,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      );
+      ),
+    );
 
-      try {
-        final user = FirebaseAuth.instance.currentUser;
-        if (user == null) throw Exception('Usuário não autenticado');
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception('Usuário não autenticado');
 
-        final imageUrl = await uploadImageToCloudinary(_image!);
-        if (imageUrl == null) throw Exception("Erro ao fazer upload da imagem.");
+      final imageUrl = await uploadImageToCloudinary(_image!);
+      if (imageUrl == null) throw Exception("Erro ao fazer upload da imagem.");
 
-        final animalData = {
-          'tipo': _animalType == 'Outro' ? _otherAnimalType : _animalType,
-          'raca': _breedController.text,
-          'cor': _colorController.text,
-          'porte': _selectedSize,
-          'condicao': _animalCondition,
-          'data-visto': _dateController.text,
-          'descricao': _descriptionController.text,
-          'latitude': _pickedLocation!.latitude,
-          'longitude': _pickedLocation!.longitude,
-          'imagem_url': imageUrl,
-          'usuario_uid': user.uid,
-          'usuario_email': user.email,
-          'usuario_nome': user.displayName ?? 'Anônimo',
-        };
+      final animalData = {
+        'tipo': _animalType == 'Outro' ? _otherAnimalType : _animalType,
+        'raca': _breedController.text,
+        'cor': _colorController.text,
+        'porte': _selectedSize,
+        'condicao': _animalCondition,
+        'data-visto': _dateController.text,
+        'descricao': _descriptionController.text,
+        'latitude': _pickedLocation!.latitude,
+        'longitude': _pickedLocation!.longitude,
+        'imagem_url': imageUrl,
+        'usuario_uid': user.uid,
+        'usuario_email': user.email,
+        'usuario_nome': user.displayName ?? 'Anônimo',
+      };
 
-        await FirebaseFirestore.instance.collection('animais_perdidos').add(animalData);
+      // nova lógica de duplicata
+      final geoSvc = GeoFireService();
+      final nearby = await geoSvc
+          .queryNearby(
+            animalData['latitude'] as double,
+            animalData['longitude'] as double,
+            0.05, // 50 metros
+          )
+          .first;
 
-        Navigator.of(context).pop();
+      Navigator.of(context).pop(); // fecha o loading
+
+      if (nearby.isEmpty) {
+        // não encontrou duplicatas: salva direto
+        await geoSvc.addAnimal(animalData);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text(
@@ -194,36 +208,48 @@ class _AddAnimalPageState extends State<AddAnimalPage> {
           ),
         );
         Navigator.pop(context, true);
-      } catch (e) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erro ao cadastrar: $e',
-              style: const TextStyle(fontWeight: FontWeight.w600),
+      } else {
+        // encontrou candidatos: vai para confirmação
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ConfirmDuplicatesPage(
+              newData: animalData,
+              candidates: nearby,
             ),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            margin: const EdgeInsets.all(16),
           ),
         );
       }
-    } else {
+    } catch (e) {
+      Navigator.of(context).pop(); // fecha o loading
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'Preencha todos os campos, selecione uma localização e uma foto.',
-            style: TextStyle(fontWeight: FontWeight.w600),
+          content: Text(
+            'Erro ao cadastrar: $e',
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          backgroundColor: Colors.orange.shade600,
+          backgroundColor: Colors.red.shade600,
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           margin: const EdgeInsets.all(16),
         ),
       );
     }
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text(
+          'Preencha todos os campos, selecione uma localização e uma foto.',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: Colors.orange.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
+      ),
+    );
   }
+}
 
   @override
   Widget build(BuildContext context) {

@@ -52,13 +52,64 @@
             font-weight: 500;
         }
 
-        .lista-pedidos {
+        /* Sistema de Abas */
+        .tabs-container {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border-radius: 20px;
-            padding: 30px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+
+        .tabs-header {
+            display: flex;
+            background: rgba(102, 126, 234, 0.1);
+            border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 20px 30px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #718096;
+            transition: all 0.3s ease;
+            position: relative;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .tab-button:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.5);
+            color: #4a5568;
+        }
+
+        .tab-content {
+            padding: 30px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
         }
 
         .section-header {
@@ -77,8 +128,14 @@
             align-items: center;
         }
 
-        .section-title::before {
+        .section-title.achados::before {
             content: "🔍";
+            margin-right: 15px;
+            font-size: 2rem;
+        }
+
+        .section-title.localizacao::before {
+            content: "📍";
             margin-right: 15px;
             font-size: 2rem;
         }
@@ -163,6 +220,10 @@
             transition: opacity 0.3s ease;
         }
 
+        .pedido.localizacao::before {
+            background: linear-gradient(90deg, #f093fb, #f5576c);
+        }
+
         .pedido:hover {
             transform: translateY(-5px);
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
@@ -200,6 +261,12 @@
             border: 1px solid #63b3ed;
         }
 
+        .condicao.localizacao {
+            background: linear-gradient(45deg, #fbb6ce, #f687b3);
+            color: #97266d;
+            border-color: #f56565;
+        }
+
         .comparacao-fotos {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -234,6 +301,18 @@
             border-color: #68d391;
         }
 
+        .foto-label.localizacao-antiga {
+            background: linear-gradient(135deg, #e6fffa, #b2f5ea);
+            color: #2c7a7b;
+            border-color: #4fd1c7;
+        }
+
+        .foto-label.localizacao-nova {
+            background: linear-gradient(135deg, #fef5e7, #fed7aa);
+            color: #c05621;
+            border-color: #f6ad55;
+        }
+
         .foto-label::before {
             margin-right: 8px;
             font-size: 1.2rem;
@@ -245,6 +324,14 @@
 
         .foto-label.nova::before {
             content: "📸";
+        }
+
+        .foto-label.localizacao-antiga::before {
+            content: "📍";
+        }
+
+        .foto-label.localizacao-nova::before {
+            content: "🆕";
         }
 
         .pedido-imagem {
@@ -332,6 +419,22 @@
             margin-left: 8px;
         }
 
+        .btn-atualizar {
+            background: linear-gradient(45deg, #ed8936, #dd6b20);
+            box-shadow: 0 8px 25px rgba(237, 137, 54, 0.4);
+        }
+
+        .btn-atualizar:hover {
+            background: linear-gradient(45deg, #dd6b20, #c05621);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(237, 137, 54, 0.5);
+        }
+
+        .btn-atualizar::after {
+            content: "📍";
+            margin-left: 8px;
+        }
+
         .empty-state {
             text-align: center;
             padding: 80px 20px;
@@ -378,6 +481,14 @@
 
             .header h1 {
                 font-size: 2rem;
+            }
+
+            .tabs-header {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                padding: 15px 20px;
             }
 
             .section-header {
@@ -439,28 +550,75 @@
             from { transform: translateY(0px); }
             to { transform: translateY(-5px); }
         }
+
+        .tab-counter {
+            background: linear-gradient(45deg, #f093fb, #f5576c);
+            color: white;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 10px;
+            min-width: 25px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>Animal Search</h1>
-            <p class="subtitle">Painel de Comparação de Fotos</p>
+            <p class="subtitle">Painel Administrativo de Comparações</p>
         </div>
 
-        <div class="lista-pedidos">
-            <div class="section-header">
-                <h2 class="section-title">Solicitações Pendentes</h2>
-                <button class="btn-refresh" onclick="carregarPedidos()">
-                    <span class="refresh-icon">🔄</span>
-                    Atualizar
+        <div class="tabs-container">
+            <div class="tabs-header">
+                <button class="tab-button active" onclick="trocarAba('achados')">
+                    🔍 Animais Achados
+                    <span id="counter-achados" class="tab-counter" style="display: none;">0</span>
+                </button>
+                <button class="tab-button" onclick="trocarAba('localizacao')">
+                    📍 Possível Nova Localização
+                    <span id="counter-localizacao" class="tab-counter" style="display: none;">0</span>
                 </button>
             </div>
-            <div id="lista-pedidos">
-                <div class="empty-state">
-                    <div class="empty-state-icon">🔍</div>
-                    <div class="empty-state-text">Carregando solicitações...</div>
-                    <div class="empty-state-subtext">Aguarde enquanto buscamos as comparações pendentes</div>
+
+            <!-- Aba Animais Achados -->
+            <div id="tab-achados" class="tab-content active">
+                <div class="section-header">
+                    <h2 class="section-title achados">Solicitações - Animais Encontrados</h2>
+                    <button class="btn-refresh" onclick="carregarAchados()">
+                        <span class="refresh-icon">🔄</span>
+                        Atualizar
+                    </button>
+                </div>
+                <div id="lista-achados">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <div class="empty-state-text">Carregando solicitações...</div>
+                        <div class="empty-state-subtext">Aguarde enquanto buscamos as comparações pendentes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Aba Possível Nova Localização -->
+            <div id="tab-localizacao" class="tab-content">
+                <div class="section-header">
+                    <h2 class="section-title localizacao">Solicitações - Possível Nova Localização</h2>
+                    <button class="btn-refresh" onclick="carregarLocalizacao()">
+                        <span class="refresh-icon">🔄</span>
+                        Atualizar
+                    </button>
+                </div>
+                <div id="lista-localizacao">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📍</div>
+                        <div class="empty-state-text">Carregando solicitações...</div>
+                        <div class="empty-state-subtext">Aguarde enquanto buscamos as comparações de localização</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -471,53 +629,59 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
 
-    <!-- Script para demonstrar funcionalidades -->
     <script>
-        // Função para marcar novos itens
-        function marcarComoNovo(elemento) {
-            elemento.classList.add('novo');
+        // Função para trocar abas
+        function trocarAba(aba) {
+            // Remove classe active de todos os botões e conteúdos
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
-            // Remove a classe 'novo' depois de 10 segundos
-            setTimeout(() => {
-                elemento.classList.remove('novo');
-            }, 10000);
+            // Adiciona classe active na aba selecionada
+            document.querySelector(`[onclick="trocarAba('${aba}')"]`).classList.add('active');
+            document.getElementById(`tab-${aba}`).classList.add('active');
+            
+            // Carrega dados da aba ativa
+            if (aba === 'achados') {
+                carregarAchados();
+            } else if (aba === 'localizacao') {
+                carregarLocalizacao();
+            }
+        }
+
+        // Função para atualizar contador das abas
+        function atualizarContador(aba, quantidade) {
+            const counter = document.getElementById(`counter-${aba}`);
+            if (quantidade > 0) {
+                counter.textContent = quantidade;
+                counter.style.display = 'inline-flex';
+            } else {
+                counter.style.display = 'none';
+            }
         }
 
         // Adicionar event listeners para os botões com loading
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('btn-confirmar')) {
+            if (e.target.classList.contains('btn-confirmar') || 
+                e.target.classList.contains('btn-ignorar') || 
+                e.target.classList.contains('btn-atualizar')) {
                 const originalText = e.target.innerHTML;
                 e.target.innerHTML = '<div class="loading"></div>';
                 e.target.disabled = true;
                 
-                // Simular processamento (será substituído pela função real)
-                setTimeout(() => {
-                    e.target.innerHTML = originalText;
-                    e.target.disabled = false;
-                }, 2000);
-            }
-            
-            if (e.target.classList.contains('btn-ignorar')) {
-                const originalText = e.target.innerHTML;
-                e.target.innerHTML = '<div class="loading"></div>';
-                e.target.disabled = true;
-                
-                // Simular processamento (será substituído pela função real)
-                setTimeout(() => {
-                    e.target.innerHTML = originalText;
-                    e.target.disabled = false;
-                }, 2000);
+                // O botão será restaurado nas funções específicas
             }
         });
 
         // Função para adicionar efeito visual ao botão de refresh
         function adicionarEfeitoRefresh() {
             const btnRefresh = document.querySelector('.btn-refresh');
-            btnRefresh.classList.add('loading');
-            
-            setTimeout(() => {
-                btnRefresh.classList.remove('loading');
-            }, 1000);
+            if (btnRefresh) {
+                btnRefresh.classList.add('loading');
+                
+                setTimeout(() => {
+                    btnRefresh.classList.remove('loading');
+                }, 1000);
+            }
         }
     </script>
 
